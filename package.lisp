@@ -3,6 +3,7 @@
   (:export
    #:at
    #:iter-i*
+   #:sum-iter-i*
    #:piter-i*
    #:sum-piter-i*
    #:collect-i*

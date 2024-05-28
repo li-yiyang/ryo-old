@@ -31,22 +31,28 @@ the last var will be iter as outer variable.
           for direct = (if (> step 0) 'to 'downto)
           finally (return program))))
 
+(defmacro sum-iter-i* (iter-range* &body body)
+  "Make a iter sum of the `body' results, return sum value. "
+  (let ((sum-var (gensym "SUM-VAR")))
+    `(let ((,sum-var 0))
+       (iter-i* ,iter-range* (incf ,sum-var (progn ,@body)))
+       ,sum-var)))
+
 (defmacro piter-i* (iter-range* &body body)
   "Make a parallel iter body.
 
 The `piter-i*' is like `iter-i*' but in multithread acceleration
 with the `lparallel' help. Behind is the `bt:make-thread' function.
 "
-  (let* ((threads (gensym "ITER-THREADS"))
+  (let* ((channel        (gensym "CHANNEL"))
+         (channel-counts (gensym "CHANNEL-COUNTS"))
          (iter-vars (mapcar #'first iter-range*)))
-    `(let ((,threads ()))
-       ;; I don't know to to pass local variables
-       ;; this could be a stupid method to do so
-       ;; but I don't care so much... 
-       (flet ((task ,iter-vars (lambda () ,@body)))
-         (iter-i* ,iter-range*
-           (push (bt:make-thread (task ,@iter-vars)) ,threads)))
-       (loop for thread in ,threads do (bt:join-thread thread)))))
+    `(let ((,channel (lparallel:make-channel))
+           (,channel-counts 0))
+       (iter-i* ,iter-range*
+         (incf ,channel-counts)
+         (lparallel:submit-task ,channel (lambda ,iter-vars ,@body) ,@iter-vars))
+       (dotimes (i ,channel-counts) (lparallel:receive-result ,channel)))))
 
 (defmacro sum-piter-i* (iter-range* &body body)
   "Make a parallel sum with thread lock protect, return sum up value.
