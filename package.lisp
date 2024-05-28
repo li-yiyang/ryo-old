@@ -1,4 +1,8 @@
 (defpackage #:ryo
   (:use :cl)
   (:export
-   #:iter-i*))
+   #:at
+   #:iter-i*
+   #:collect-i*
+   #:flat-collect-i*
+   ))

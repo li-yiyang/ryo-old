@@ -30,3 +30,37 @@ the last var will be iter as outer variable.
           for (start end step) = (apply #'->range range)
           for direct = (if (> step 0) 'to 'downto)
           finally (return program))))
+
+(defmacro collect-i* (iter-range* &body body)
+  "Make a nested collect iter process.
+
+The `body' result will be collected, the collect result will
+be nested in sequence. If you want to collect all into a flatten
+sequence, use `flat-collect-i*' instead.
+
+The `iter-range*' of `collect-i*' is same with `iter-i*'.
+"
+  (flet ((->range (a &optional (b 0 b-set?) (step 1))
+           (if b-set? `(,a ,b ,step) `(,0 (1- ,a) ,step))))
+    (loop for program = `(progn ,@body)
+            then `(loop for ,var from ,start ,direct ,end by ,step
+                        collect ,program)
+          for (var . range) in iter-range*
+          for (start end step) = (apply #'->range range)
+          for direct = (if (> step 0) 'to 'downto)
+          finally (return program))))
+
+(defmacro flat-collect-i* (iter-range* &body body)
+  "Make a flattened collect iter process.
+
+The `body' result will be collected into a list in sequence.
+
+Behind the scene is a `iter-i*' process and the result of `body'
+will be pushed into a temp list, whose reverse was finally retruned
+as results.
+"
+  (let ((temp-list (gensym "TEMP-LIST")))
+    `(let ((,temp-list ()))
+       (iter-i* ,iter-range*
+         (push (progn ,@body) ,temp-list))
+       (nreverse ,temp-list))))
