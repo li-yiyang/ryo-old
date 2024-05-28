@@ -2,7 +2,7 @@
   :author ("凉凉")
   :version "0"
   :description "This is a package where some of my daily lisp code goes in."
-  :depends-on ("str")
+  :depends-on ("str" "bt-semaphore")
   :serial t
   :components
   ((:file "package")
