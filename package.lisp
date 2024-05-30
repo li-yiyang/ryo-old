@@ -8,4 +8,5 @@
    #:sum-piter-i*
    #:collect-i*
    #:flat-collect-i*
+   #:notify
    ))

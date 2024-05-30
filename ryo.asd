@@ -6,5 +6,7 @@
   :serial t
   :components
   ((:file "package")
+   (:file "macro-helper")
    (:file "matrix")
-   (:file "iter")))
+   (:file "iter")
+   (:file "notify")))
