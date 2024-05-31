@@ -7,6 +7,9 @@
   :components
   ((:file "package")
    (:file "macro-helper")
+   (:file "length")
    (:file "matrix")
    (:file "iter")
+   (:file "format")
+   (:file "enum")
    (:file "notify")))
