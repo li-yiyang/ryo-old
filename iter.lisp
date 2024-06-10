@@ -76,7 +76,7 @@ iter-var condition if reject function return is non-nil.
                           do ,program)
           for (var . range) in iter-range*
           for (start end step) = (apply #'->range range)
-          for direct = (if (> step 0) 'to 'downto)
+          for direct = (if (and (numberp step) (< step 0)) 'downto 'to)
           finally (return (if (or accept reject skip)
                               `(let ((,test-f ,(make-test-f)))
                                  ,program)
