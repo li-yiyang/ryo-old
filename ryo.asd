@@ -12,4 +12,9 @@
    (:file "iter")
    (:file "format")
    (:file "enum")
-   (:file "notify")))
+   (:file "notify")
+   (:module statistic
+    :pathname "statistic"
+    :components
+    ((:file "histogram")
+     (:file "preview")))))

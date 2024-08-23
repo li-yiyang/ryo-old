@@ -157,6 +157,17 @@ In a word, `piter-i*' should be used as only a Parallel task submitter.
            (lparallel:submit-task ,channel (lambda ,iter-vars ,@body) ,@iter-vars))
          (dotimes (i ,channel-counts) (lparallel:receive-result ,channel))))))
 
+(defmacro pdolist ((var list &optional result) &body body)
+  "Dolist, but in lparallel. "
+  (let* ((channel        (gensym "CHANNEL"))
+         (channel-counts (gensym "CHANNEL-COUNTS")))
+    `(let ((,channel (lparallel:make-channel))
+           (,channel-counts 0))
+       (dolist (,var ,list ,result)
+         (incf ,channel-counts)
+         (lparallel:submit-task ,channel (lambda (,var) ,@body) ,var))
+       (dotimes (i ,channel-counts) (lparallel:receive-result ,channel)))))
+
 (defmacro sum-piter-i* (iter-range* &body key-value-body)
   "Make a parallel sum with thread lock protect, return sum up value.
 
@@ -197,6 +208,40 @@ HOWEVER, `collect-i*' does not support key-value-body form.
           for (start end step) = (apply #'->range range)
           for direct = (if (> step 0) 'to 'downto)
           finally (return program))))
+
+(defun list-dimensions (list)
+  "Return the nested dimensions of the `list'.
+
+Note that the `list' is assumed to be in same shape as
+this method only calculate the first element in the nested
+list.
+
+Example:
+
+    (list-dimensions '((1 2 3)
+                       (4 5 6)))
+    ;; => (2 3)
+
+Feature (maynot as expected):
+
+    (list-dimensions '((1 2) (3 4 5)))
+    ;; => (2 2)
+"
+  (if (atom list) nil
+      (cons (length list) (list-dimensions (rest list)))))
+
+(defmacro make-array* (iter-range* &body body)
+  "Make a array with iter body.
+
+The `body' result will be collected first via `collect-i*', the
+collected result will be then used as the initial-element for
+`make-array'.
+
+The `iter-range*' of `make-array*' is same as `collect-i*'.
+"
+  `(let ((collection (collect-i* ,iter-range* ,@body)))
+     (make-array (list-dimensions collection)
+                 :initial-contents collection)))
 
 (defmacro flat-collect-i* (iter-range* &body key-value-body)
   "Make a flattened collect iter process.
