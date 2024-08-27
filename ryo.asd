@@ -16,5 +16,11 @@
    (:module statistic
     :pathname "statistic"
     :components
-    ((:file "histogram")
+    ((:file "macros")
+     (:file "utils")
+     (:file "hist-protocol")
+     (:file "histogram")
+     (:file "histogram-add-info")
+     (:file "2d-histogram")
+     (:file "2d-histogram-add-info")
      (:file "preview")))))
