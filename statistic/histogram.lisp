@@ -42,10 +42,30 @@ Return given axies max value.
 And if axies is not found, ignore axies information. "))
 
 (defgeneric add-to-hist (hist val)
-  (:documentation "Add `val' to `histogram'. "))
+  (:documentation
+   "Add `val' to `histogram'.
+Return values are index to hist if success, otherwise return `nil'.
+
+Example:
+
+    (add-to-hist hist 1)          ; will return 0 (for example) as index
+    (add-to-hist hist (list x y)) ; will return values 0 0 as index
+
+If the added infomation is beyond histogram range,
+the `val' will not be sampled. However, it will still be stored
+in histogram buffer until cleaned by `hist-clear-buffer!'.
+
+To reuse those un-sampled, use `hist-rebin!' after changing the
+histogram sampling range.
+"))
 
 (defgeneric %add-to-hist (hist val)
-  (:documentation "Add `val' to `hist' hist slot. "))
+  (:documentation
+   "Add `val' to `hist' hist slot.
+Return values are index to hist.
+
+Note: this function is what's behind the `add-to-hist'.
+Modify this function for functionalities instead of `add-to-hist'. "))
 
 (defgeneric hist-rebin! (hist)
   (:documentation
@@ -55,13 +75,41 @@ This should (and will) be called after changing histogram size. "))
 
 (defgeneric hist-clear-buffer! (hist)
   (:documentation
-   "Clear `hist' buffer. "))
+   "Clear `hist' buffer.
+
+Note: this will also empty histogram sampled data,
+making the `hist' to a empty histogram. "))
 
 (defgeneric hist-to-csv (hist path &key if-exists)
   (:documentation "Write `hist' to CSV file to `path'. "))
 
 (defgeneric hist-to-ascii (hist &key stream &allow-other-keys)
-  (:documentation "Output `hist' to `stream'. "))
+  (:documentation "Output `hist' to `stream' in ASCII form. "))
+
+(defgeneric hist-iter-over (hist fn &key use-index &allow-other-keys)
+  (:documentation
+   "Iterate `fn' on `hist' data.
+
+The `fn' shall be called with hist count, range info, and so on.
+It is recommanded to use flexible lambda list like `&rest' to
+capture and throw away unwanted data.
+
+Example:
+
+    (hist-iter-over hist (lambda (count &rest args)
+                           (declare (ignore args))
+                           (format count)))
+
+If `use-index' is set to be non-nil, it will use index
+rather than range infomation for iter-fn.
+Example:
+
+    (hist-iter-over hist (lambda (count idx) ...)
+                    :use-index t)
+
+    (hist-iter-over hist (lambda (count left right ...) ...)
+                    :use-index nil)
+"))
 
 (defclass histogram ()
   ((min  :initarg :min :initform -1.0)
@@ -83,12 +131,25 @@ Then use `add-to-hist' function to add more data to histogram instance.
 
     (add-to-hist hist val)
 
+To iter over histogram instance data, use `hist-iter-over':
+
+    (hist-iter-over hist (lambda (count left right) ...))
+
+where `count' is the histogram sampling count number;
+`left' and `right' is the sampling bin range [left, right).
+
 Use `hist-max', `hist-min' and `hist-bins' to access hist attributes.
 
 Use `hist-to-csv' and `hist-to-ascii' for rendering the data.
 
 For `histogram', the `hist-to-ascii' will return histogram plot in
 vertical chart.
+
+For developer:
+the hist data is stored in an array (slot `hist'):
+
+
+    #(<min bin count> -> ... -> <max bin count>)
 "))
 
 (defmethod initialize-instance :after ((hist histogram) &key)
@@ -145,7 +206,12 @@ By default, `min' is -1.0 and `max' is 1.0, `bins' is 100.
 (defmethod %add-to-hist ((histo histogram) val)
   (with-slots (hist min max tick) histo
     (when (and (<= min val) (< val max))
-      (incf (aref hist (floor (/ (- val min) tick)))))))
+      (let ((index (floor (/ (- val min) tick))))
+	(incf (aref hist index))
+	;; return added index
+	index))))
+
+;; Shall not define `add-to-hist' behavior, define `%add-to-hist' instead
 
 (defmethod add-to-hist :before ((hist histogram) val)
   (push val (slot-value hist 'buffer)))
@@ -156,6 +222,14 @@ By default, `min' is -1.0 and `max' is 1.0, `bins' is 100.
 (defmethod hist-clear-buffer! ((hist histogram))
   (setf (slot-value hist 'buffer) ())
   (hist-rebin! hist))
+
+(defmethod hist-iter-over ((histo histogram) fn &key (use-index t))
+  (with-slots (hist bins min tick) histo
+    (if use-index
+	(loop for i below bins do
+	  (funcall fn (aref hist i) i))
+	(loop for i below bins do
+	  (funcall fn (aref hist i) (+ min (* tick i)) (+ min (* tick (1+ i))))))))
 
 (defmethod hist-to-csv ((histo histogram) path &key (if-exists :supersede))
   (with-slots (hist bins) histo
@@ -204,12 +278,30 @@ Then use `add-to-hist' function to add more data to histogram instance.
 
     (add-to-hist hist val) ; val shall be like '(x y)
 
+To iter over histogram instance data, use `hist-iter-over':
+
+    (hist-iter-over hist (lambda (count x-left y-bottom x-right y-top) ...))
+
+where `count' is the histogram sampling count number;
+`left' and `right' is the sampling bin range [left, right).
+
 Use `hist-max', `hist-min' and `hist-bins' to access hist attributes.
 
 Use `hist-to-csv' and `hist-to-ascii' for rendering the data.
 
 For `2d-histogram', the `hist-to-ascii' will return 2d-histogram plot in
 ASCII art image.
+
+
+For developer:
+the data within hist is stored as a 2D array (slot `hist'):
+
+
+    #2A((<x-min y-min> -> <x-max y-min>)
+        ( ...                          )
+        (<x-min y-max> -> <x-max y-max>))
+
+the index should be refered as (aref hist y x).
 "))
 
 (defun make-2d-histogram (data &rest args &key (x-min -1.0) (x-max 1.0)
@@ -294,17 +386,30 @@ By default, `min' is -1.0 and `max' is 1.0, `bins' is 100.
 	  (y (second val)))
       (when (and (<= min x) (< x max)
 		 (<= y-min y) (< y y-max))
-	(incf (aref hist
-		    (floor (/ (- x min) tick))
-		    (floor (/ (- y y-min) y-tick))))))))
+	(let ((x (floor (/ (- x min) tick)))
+	      (y (floor (/ (- y y-min) y-tick))))
+	  (incf (aref hist y x))
+	  (values x y))))))
+
+(defmethod hist-iter-over ((histo 2d-histogram) fn &key (use-index t))
+  (with-slots (hist bins y-bins min y-min tick y-tick) histo
+    (if use-index
+	(loop for y below y-bins do
+	  (loop for x below bins do
+	    (funcall fn (aref hist y x) y x)))
+	(loop for y below y-bins do
+	  (loop for x below bins do
+	    (funcall fn (aref hist y x)
+		     (+ min (* tick x)) (+ y-min (* y-tick y))
+		     (+ min (* tick (1+ x))) (+ y-min (* y-tick (1+ y)))))))))
 
 (defmethod hist-to-csv ((histo 2d-histogram) path &key (if-exists :supersede))
   (with-slots (hist bins y-bins) histo
     (with-open-file (csv path :direction :output :if-exists if-exists)
-      (loop for i below y-bins
-	    do (loop for j below (1- bins)
-		     do (format csv "~d, " (aref hist i j))
-		     finally (format csv "~d~%" (aref hist i j)))))))
+      (loop for y from (1- y-bins) downto 0
+	    do (loop for x below (1- bins)
+		     do (format csv "~d, " (aref hist y x))
+		     finally (format csv "~d~%" (aref hist y x)))))))
 
 (defun ascii-grayscale (uniform)
   "Return ASCII character according to `uniform' scale.
@@ -318,9 +423,9 @@ The `uniform' should be within [0, 1) range. "
 			  &allow-other-keys)
   (with-slots (x-min y-min x-max y-max bins y-bins hist) histo
     (let ((cmax 0))
-      (loop for i below y-bins
-	    collect (loop for j below bins
-			  for count = (aref hist i j)
+      (loop for y from (1- y-bins) downto 0
+	    collect (loop for x below bins
+			  for count = (aref hist y x)
 			  if (> count cmax)
 			    do (setf cmax count)
 			  collect count)
@@ -332,3 +437,165 @@ The `uniform' should be within [0, 1) range. "
 						(funcall color-function (float (/ count cmax))))
 					      row))
 				    grids))))))
+
+(defclass histogram-add-info (histogram)
+  ((info-fn :initform (error "Missing `info-fn'. ") :initarg :info-fn)
+   info)
+  (:documentation
+   "A bucketed histogram with additional infomation.
+
+Use `make-histogram-add-info' function to create 1D histogram from 1D list data.
+The `info-fn' should seperate the data for sampling and the data for storing,
+and return them in values form:
+
+    (make-histogram-add-info data (lambda (val) (values val val)))
+
+For developer:
+the info is isomorphism to hist (slot `hist'), instead, the info (array)
+element is a list containing the addition information.
+"))
+
+(defun make-histogram-add-info (data info-fn &rest args &key (min -1.0) (max 1.0) (bins 100))
+  "Make a histogram with additional infomation. "
+  (declare (ignorable min max bins))
+  (let ((histo (apply #'make-instance 'histogram-add-info
+		      `(:info-fn ,info-fn ,@args))))
+    (loop for dat in data do
+      (add-to-hist histo dat))
+    histo))
+
+(defmethod hist-rebin! :around ((histo histogram-add-info))
+  (with-slots (info bins) histo
+    (setf info (make-array bins :element-type 'list :initial-element ()))
+    (call-next-method)))
+
+(defmethod hist-iter-over ((histo histogram-add-info) fn &key (use-index t))
+  (with-slots (hist bins min tick info) histo
+    (if use-index
+	(loop for i below bins do
+	  (funcall fn (aref hist i) i (aref info i)))
+	(loop for i below bins do
+	  (funcall fn (aref hist i)
+		   (+ min (* tick i)) (+ min (* tick (1+ i)))
+		   (aref info i))))))
+
+(defmethod %add-to-hist :around ((histo histogram-add-info) val)
+  (with-slots (info-fn info) histo
+    (multiple-value-bind (hist-val info-val)
+	(funcall info-fn val)
+      (let ((index (call-next-method histo hist-val)))
+	(when index
+	  (push info-val (aref info index)))))))
+
+(defmacro info-fn (&rest info-fn*)
+  "Quickly generate a info-fn for `histogram-add-info'.
+
+Example:
+
+    (info-fn first second :info any-fn)
+
+will be expanded into
+
+    (lambda (val)
+      (values (list (first val) (second val))
+              (any-fn val)))
+
+also, if provided is integer number:
+
+    (info-fn 1 :info 2)
+
+will be expanded into
+
+    (lambda (val)
+      (values (list (nth 1 val))
+              (nth 2 val)))
+
+if provided is a list, will be treated as a calling chain:
+
+    (info-fn (first truncate) :info identity)
+
+will be expanded into
+
+    (lambda (val) (values (truncate (first val)) (identity val)))
+
+If not providing with `:info', it will be function `identity' by default;
+If only provide one function in each part (hist and info), the return
+form will be atom, otherwise, it will be a list.
+"
+  (let ((val (gensym "VAL")))
+    (multiple-value-bind (hist-fn info-fn)
+	(labels ((rule-map (fn*)
+		   (cond ((numberp fn*) `(nth ,fn* ,val))
+			 ((atom    fn*) `(,fn* ,val))
+			 ((endp fn*)    val)
+			 (t             `(,(car fn*) ,(rule-map (rest fn*)))))))
+	  ;; seperate hist-fn and info-fn, while using `rule-map' to
+	  ;; map them to true function calling form.
+	  (loop for info-fns on info-fn*
+		for info-fn = (car info-fns)
+		if (eq info-fn :info)
+		  return (values hist-fn (mapcar #'rule-map (rest info-fns)))
+		else collect (rule-map info-fn) into hist-fn
+		finally (return (values hist-fn '()))))
+      `(lambda (,val)
+	 (values ,(cond ((= (length hist-fn) 0) `(identity ,val))
+			((= (length hist-fn) 1) (first hist-fn))
+			(t `(list ,@hist-fn)))
+		 ,(cond ((= (length info-fn) 0) `(identity ,val))
+			((= (length info-fn) 1) (first info-fn))
+			(t `(list ,@info-fn))))))))
+
+(defclass 2d-histogram-add-info (2d-histogram)
+  ((info-fn :initform (error "Missing `info-fn'. ") :initarg :info-fn)
+   info)
+  (:documentation
+   "A bucketed 2d-histogram with additional infomation.
+
+Use `make-2d-histogram-add-info' function to create 1D histogram from 1D list data.
+The `info-fn' should seperate the data for sampling and the data for storing,
+and return them in values form:
+
+    (make-histogram-add-info data (lambda (val) (values val val)))
+
+For developer:
+the info is isomorphism to hist (slot `hist'), instead, the info (array)
+element is a list containing the addition information.
+"))
+
+(defun make-2d-histogram-add-info (data info-fn &rest args
+				   &key (x-min -1.0) (x-max 1.0) (x-bins 100)
+				     (y-min -1.0) (y-max 1.0) (y-bins 100))
+  "Make a histogram with additional infomation. "
+  (declare (ignorable x-min x-max x-bins y-min y-max y-bins))
+  (let ((histo (apply #'make-instance '2d-histogram-add-info
+		      `(:info-fn ,info-fn ,@args))))
+    (loop for dat in data do
+      (add-to-hist histo dat))
+    histo))
+
+(defmethod hist-rebin! :around ((histo 2d-histogram-add-info))
+  (with-slots (info bins y-bins) histo
+    (setf info (make-array (list bins y-bins) :element-type 'list :initial-element ()))
+    (call-next-method)))
+
+(defmethod hist-iter-over ((histo 2d-histogram-add-info) fn &key (use-index t))
+  (with-slots (hist bins y-bins min y-min tick y-tick info) histo
+    (if use-index
+	(loop for y below y-bins do
+	  (loop for x below bins do
+	    (funcall fn (aref hist y x) x y (aref info y x))))
+	(loop for y below y-bins do
+	  (loop for x below bins do
+	    (funcall fn (aref hist y x)
+		     (+ min (* tick x)) (+ y-min (* y-tick y))
+		     (+ min (* tick (1+ x))) (+ y-min (* y-tick (1+ y)))
+		     (aref info y x)))))))
+
+(defmethod %add-to-hist :around ((histo 2d-histogram-add-info) val)
+  (with-slots (info-fn info) histo
+    (multiple-value-bind (hist-val info-val)
+	(funcall info-fn val)
+      (multiple-value-bind (x y)
+	  (call-next-method histo hist-val)
+	(when x
+	  (push info-val (aref info y x)))))))

@@ -4,6 +4,9 @@
    ;; histogram
    #:make-histogram
    #:make-2d-histogram
+   #:make-histogram-add-info
+   #:make-2d-histogram-add-info
+   #:info-fn
    #:histogram
    #:2d-histogram
    #:hist-bins
@@ -14,6 +17,7 @@
    #:hist-clear-buffer!
    #:hist-to-csv
    #:hist-to-ascii
+   #:hist-iter-over
    #:ascii-grayscale
    ;; preview
    #:random-samples
@@ -54,6 +58,9 @@
    ;; ===== statistic =====
    #:make-histogram
    #:make-2d-histogram
+   #:make-histogram-add-info
+   #:make-2d-histogram-add-info
+   #:info-fn
    #:histogram
    #:2d-histogram
    #:hist-bins
@@ -64,6 +71,7 @@
    #:hist-clear-buffer!
    #:hist-to-csv
    #:hist-to-ascii
+   #:hist-iter-over
    #:ascii-grayscale
 
    #:random-samples
