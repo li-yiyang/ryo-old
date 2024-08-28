@@ -60,6 +60,7 @@ the hist data is stored in an array (slot `hist'):
 ;; + `hist-normed-reduce' `:around': wrap the `min', `max', `bins'
 ;;   arguments
 ;;   should implement `hist-normed-reduce' for each children class;
+;; + `hist-dump'
 
 (defmethod add-to-hist ((hist histogram) val)
   (with-slots (buffer-hist buffer-cache) hist
@@ -142,6 +143,27 @@ the hist data is stored in an array (slot `hist'):
 			:min     min
 			:max     max
 			:offset  offset))))
+
+;; By default, `hist-shape-eq' should return `nil'
+
+(defmethod hist-shape-eq (hist1 hist2)
+  (declare (ignore hist1 hist2))
+  nil)
+
+;; Wrap around the `hist-add' to first test if two hist is in same shape.
+;; define `hist-add' method for specific methods
+
+(defmethod hist-add :around (hist1 hist2)
+  (if (hist-shape-eq hist1 hist2)
+      (call-next-method)
+      (error (format nil "~A and ~A should be two histogram in same shape. "
+		     hist1 hist2))))
+
+(defmethod hist-dump ((hist histogram))
+  (with-slots (buffer-hist) hist
+    (let ((dump (hist-dump-empty hist)))
+      (loop for elem in buffer-hist do
+	(add-to-hist dump elem)))))
 
 ;; Developer Note:
 ;; A `histogram' children should implement below methods and functions:
@@ -331,3 +353,24 @@ By default, `min' is -1.0 and `max' is 1.0, `bins' is 100.
 	  (hist-iter-over histo #'inc-fn :use-index nil)
 	  (hist-iter-over histo #'inc    :use-index nil)))
     (float (/ numerator denominator))))
+
+(defmethod hist-shape-eq ((hist1 histogram) (hist2 histogram))
+  (and (= (slot-value hist1 'min) (slot-value hist2 'min))
+       (= (slot-value hist1 'max) (slot-value hist2 'max))
+       (= (slot-value hist1 'bins) (slot-value hist2 'bins))))
+
+(defmethod hist-dump-empty ((hist histogram))
+  (make-histogram () :min  (hist-min hist)
+		     :max  (hist-max hist)
+		     :bins (hist-bins hist)))
+
+(defmethod hist-add ((hist1 histogram) (hist2 histogram))
+  (let ((new-hist (hist-dump-empty hist1)))
+    (setf (slot-value new-hist 'buffer-hist)
+	  (append (slot-value hist1 'buffer-hist)
+		  (slot-value hist2 'buffer-hist)))
+    (with-slots (hist) new-hist
+      (loop for i below (hist-bins new-hist) do
+	(setf (at hist i) (+ (at (slot-value hist1 'hist) i)
+			     (at (slot-value hist2 'hist) i)))))
+    new-hist))

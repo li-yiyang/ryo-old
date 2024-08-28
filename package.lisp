@@ -27,6 +27,10 @@
    #:hist-vector-euclid-norm
    #:hist-normed-reduce
    #:hist-normed-mean
+   #:hist-dump-empty
+   #:hist-dump
+   #:hist-shape-eq
+   #:hist-add
 
    #:hist-to-csv
    #:hist-to-ascii
@@ -95,6 +99,7 @@
    #:hist-vector-euclid-norm
    #:hist-normed-reduce
    #:hist-normed-mean
+   #:hist-add
 
    #:hist-to-csv
    #:hist-to-ascii

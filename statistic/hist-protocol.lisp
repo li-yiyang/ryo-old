@@ -279,3 +279,33 @@ By default, the `norm-fn' is `hist-vector-euclid-norm', which is
 same as Euclid norm.
 
 The `offset' and `density-fn' are same like `hist-mean'. "))
+
+(defgeneric hist-shape-eq (hist1 hist2)
+  (:documentation
+   "Test if two histogram `hist1' and `hist2' has same shape.
+
+If `hist1' and `hist2' is in same shape, they have to be in same:
++ range: their sampling range should be same;
++ bins: their sampling bins should be same. "))
+
+(defgeneric hist-add (hist1 hist2)
+  (:documentation
+   "Add two histogram with same dimension.
+Return a new histogram with added hist count.
+
+If two histogram is addable, they have to be in same shape,
+which is detected by `hist-shape-eq'. "))
+
+(defgeneric hist-dump-empty (hist)
+  (:documentation
+   "Make a new empty histogram with same shape like `hist'.
+Return a new empty histogram. "))
+
+(defgeneric hist-dump (hist)
+  (:documentation
+   "Make a new histogram with same data as `hist'.
+Return a new dumped histogram.
+
+Note this is almost same like copy a histogram and do
+`hist-clear-buffer!' on the copied histogram, which
+means copied histogram does not include `buffer-cache'. "))

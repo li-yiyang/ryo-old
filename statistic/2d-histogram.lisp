@@ -319,3 +319,27 @@ The `uniform' should be within [0, 1) range. "
 	  (hist-iter-over histo #'inc    :use-index nil)))
     ;; return reduced normed histogram
     (float (/ numerator denominator))))
+
+(defmethod hist-dump-empty ((hist 2d-histogram))
+  (let+ (((x-min y-min) (hist-min hist))
+	 ((x-max y-max) (hist-max hist))
+	 ((x-bins y-bins) (hist-bins hist)))
+    (make-2d-histogram () :x-min  x-min
+			  :x-max  x-max
+			  :y-min  y-min
+			  :y-max  y-max
+			  :x-bins x-bins
+			  :y-bins y-bins)))
+
+(defmethod hist-add ((hist1 2d-histogram) (hist2 2d-histogram))
+  (let ((new-hist (hist-dump-empty hist1)))
+    (setf (slot-value new-hist 'buffer-hist)
+	  (append (slot-value hist1 'buffer-hist)
+		  (slot-value hist2 'buffer-hist)))
+    (with-slots (hist) new-hist
+      (let+ (((x-bins y-bins) (hist-bins new-hist)))
+	(loop for x below x-bins do
+	  (loop for y below y-bins do
+	    (setf (at hist x y) (+ (at (slot-value hist1 'hist) x y)
+				   (at (slot-value hist2 'hist) x y)))))))
+    new-hist))

@@ -134,3 +134,12 @@ form will be atom, otherwise, it will be a list.
 		 ,(cond ((= (length info-fn) 0) `(identity ,val))
 			((= (length info-fn) 1) (first info-fn))
 			(t `(list ,@info-fn))))))))
+
+(defmacro let+ (bindings &body body)
+  (if (endp bindings)
+      `(progn ,@body)
+      (let ((var-exp (first bindings)))
+	`(destructuring-bind ,(first var-exp)
+	     ,(second var-exp)
+	   (let+ ,(rest bindings)
+	     ,@body)))))
