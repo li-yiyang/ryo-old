@@ -12,15 +12,31 @@
    (:file "iter")
    (:file "format")
    (:file "enum")
-   (:file "notify")
-   (:module statistic
-    :pathname "statistic"
-    :components
-    ((:file "macros")
-     (:file "utils")
-     (:file "hist-protocol")
-     (:file "histogram")
-     (:file "histogram-add-info")
-     (:file "2d-histogram")
-     (:file "2d-histogram-add-info")
-     (:file "preview")))))
+   (:file "notify")))
+
+(asdf:defsystem #:ryo/statistic
+  :author ("凉凉")
+  :version "0"
+  :description "Do some basic statistic things, like histogram. "
+  :depends-on ()
+  :serial t
+  :pathname "statistic"
+  :components
+  ((:file "package")
+   (:file "macros")
+   (:file "utils")
+   (:file "hist-protocol")
+   (:file "histogram")
+   (:file "histogram-add-info")
+   (:file "2d-histogram")
+   (:file "2d-histogram-add-info")
+   (:file "preview")))
+
+(asdf:defsystem #:ryo/all
+  :author ("凉凉")
+  :version "0"
+  :description "Load ALL ryo packages. "
+  :depends-on ("ryo" "ryo/statistic")
+  :serial t
+  :components
+  ())
