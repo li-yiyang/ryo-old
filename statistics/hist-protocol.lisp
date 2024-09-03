@@ -1,4 +1,4 @@
-(in-package :ryo.statistics)
+(in-package :ryo/statistics)
 
 ;; This file defines the Protocol of Histogram-like class.
 ;; In theory, these protocol are those exposed for using outside

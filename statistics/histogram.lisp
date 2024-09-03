@@ -1,4 +1,4 @@
-(in-package :ryo.statistics)
+(in-package :ryo/statistics)
 
 ;; This file defines 1D histogram class `histogram'.
 

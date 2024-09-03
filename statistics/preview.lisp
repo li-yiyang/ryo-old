@@ -1,4 +1,4 @@
-(in-package #:ryo.statistics)
+(in-package #:ryo/statistics)
 
 (declaim (inline possibility))
 (defun possibility (p)

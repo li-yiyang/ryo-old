@@ -1,5 +1,5 @@
 (defpackage #:ryo
-  (:use :cl :ryo.statistics)
+  (:use :cl)
   (:export
    ;; length
    #:length=

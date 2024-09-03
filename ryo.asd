@@ -14,13 +14,13 @@
    (:file "enum")
    (:file "notify")))
 
-(asdf:defsystem #:ryo/statistic
+(asdf:defsystem #:ryo/statistics
   :author ("凉凉")
   :version "0"
   :description "Do some basic statistic things, like histogram. "
   :depends-on ()
   :serial t
-  :pathname "statistic"
+  :pathname "statistics"
   :components
   ((:file "package")
    (:file "macros")

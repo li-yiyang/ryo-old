@@ -1,6 +1,6 @@
-(in-package :ryo.statistics)
+(in-package :ryo/statistics)
 
-;; This file defines histogram with additional information. 
+;; This file defines histogram with additional information.
 
 (defclass histogram-add-info (histogram)
   ((info-fn :initform (error "Missing `info-fn'. ") :initarg :info-fn)

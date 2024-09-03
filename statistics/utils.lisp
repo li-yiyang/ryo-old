@@ -1,7 +1,7 @@
-(in-package :ryo.statistics)
+(in-package :ryo/statistics)
 
 ;; This file defines some utilities functions for `ryo.statistics' package
-;; to use. 
+;; to use.
 
 (defun hist-vector-euclid-norm (vector)
   "Vector should be a sequence like `list' or `vector' or signle number.

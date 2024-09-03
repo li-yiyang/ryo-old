@@ -1,4 +1,4 @@
-(in-package :ryo.statistics)
+(in-package :ryo/statistics)
 
 ;; This file defines 2D histogram class `2d-histogram'.
 ;; see `histogram.lisp' for Develop Notes.

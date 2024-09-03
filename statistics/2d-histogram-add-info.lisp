@@ -1,6 +1,6 @@
-(in-package :ryo.statistics)
+(in-package :ryo/statistics)
 
-;; This file defines 2D histogram with additional infomation. 
+;; This file defines 2D histogram with additional infomation.
 
 (defclass 2d-histogram-add-info (2d-histogram)
   ((info-fn :initform (error "Missing `info-fn'. ") :initarg :info-fn)
