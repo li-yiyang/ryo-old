@@ -256,7 +256,7 @@ By default, `min' is -1.0 and `max' is 1.0, `bins' is 100.
 (defmethod hist-to-csv ((histo histogram) path &key (if-exists :supersede))
   (with-slots (hist bins) histo
     (with-open-file (csv path :direction :output :if-exists if-exists)
-      (hist-iter-over hist
+      (hist-iter-over histo
 		      (lambda (count x)
 			(format csv "~d, ~d" x count))
 		      :use-index t))))
