@@ -21,6 +21,17 @@ Example:
 	     (random-samples (rest list) (1- n) (1- end) (cons (first list) samples))
 	     (random-samples (rest list) n (1- end) samples)))))
 
+(defun random-samples (list &optional (collect 10) (end (max (length list) collect)) (samples ()))
+  (loop for sample in list
+	while (> collect 0)
+	do (progn
+	     (when (or (<= collect end)		; no more let
+		       (possibility (float (/ collect end))))
+	       (decf collect)
+	       (push sample samples))
+	     (decf end))
+	finally (return samples)))
+
 (defun ascii-table-form (table-list &key (stream t) (element-formatter "~A") (align :right) (width 0))
   "Format 2D list as ASCII table.
 
