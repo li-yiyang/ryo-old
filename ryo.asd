@@ -32,6 +32,29 @@
    (:file "2d-histogram-add-info")
    (:file "preview")))
 
+(asdf:defsystem #:ryo/tex
+  :author ("凉凉")
+  :version "0"
+  :description "This is a package that helps to generate/compile simple LaTeX. "
+  :depends-on ("str")
+  :serial t
+  :pathname "tex"
+  :components
+  ((:file "package")
+   (:file "protocol")
+   (:file "utils")
+   (:file "widget")
+   (:file "container")
+   (:file "document")
+   (:file "environment")
+   (:file "plain")
+   (:file "image")
+
+   ;; To-do:
+   ;; (:file "link")
+   ;; (:file "math")
+   ))
+
 (asdf:defsystem #:ryo/all
   :author ("凉凉")
   :version "0"

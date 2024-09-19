@@ -1,0 +1,26 @@
+#+title: ryo/tex
+* to define
+#+begin_src lisp
+  (define-document article
+    :default-package '("graphix"
+  		     ""))
+  (define-document beamer)
+
+  (define-environment frame ())
+#+end_src
+
+* to call
+#+begin_src lisp
+  (tex (:documentclass "article"
+        :usepackage ("graphicx")
+        :title "A simple")
+    (frame (:title "Hello"))
+    (dotimes (i 10)
+      (frame (:title (fmt "The ~D frame" i)
+  	    :subtitle "haha")
+        (let ((img (image (make-a-image-function-return-image-path)
+  			:caption "A image")))
+  	(para "As you may see. "
+  	      "The image" (link-to img) "is nice"))))
+    (frame (:title "Thank you")))
+#+end_src
