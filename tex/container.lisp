@@ -16,3 +16,6 @@
 	do (format t "~&")
 	do (render widget)))
 
+(defun title (title)
+  "Set current container's title. "
+  (setf (title-of *container*) title))

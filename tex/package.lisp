@@ -9,12 +9,20 @@
    #:when-str
 
    #:widget
+   #:container
+   #:title
+
    #:plain
    #:image
+
    #:document
    #:define-document
+   #:beamer
+   #:article
+
    #:environment
    #:define-environment
+   #:frame
 
    ;; see `protocol.lisp'
    #:parent

@@ -19,10 +19,10 @@ Example:
     (plain \"a simple \\LaTeX string\")
     (plain \"~Dth, as formatting string\" i)
 "
-  (let ((text (if (endp args)
-		  text-or-control-string
-		  (apply #'format nil text-or-control-string args)))
-	(plain (make-instance 'plain :text text)))
+  (let* ((text (if (endp args)
+		   text-or-control-string
+		   (apply #'format nil text-or-control-string args)))
+	 (plain (make-instance 'plain :text text)))
     (add-to plain *container*)))
 
 (defmethod render ((plain plain))
