@@ -66,8 +66,8 @@ the hist data is stored in an array (slot `hist'):
   (with-slots (buffer-hist buffer-cache) hist
     (let ((indexs (multiple-value-list (%add-to-hist hist val))))
       (if (car indexs) 			; first not nil, a.k.a. have indexs returned
-	  (push val buffer-hist)
-	  (push val buffer-cache))
+          (push val buffer-hist)
+          (push val buffer-cache))
       (values-list indexs))))
 
 (defmethod hist-clear-buffer! ((hist histogram))
@@ -77,7 +77,7 @@ the hist data is stored in an array (slot `hist'):
 (defmethod hist-clear-all! ((hist histogram))
   (with-slots (buffer-hist buffer-cache) hist
     (setf buffer-cache ()
-	  buffer-hist  ())
+          buffer-hist  ())
     (hist-rebin! hist)))
 
 (defmethod initialize-instance :after ((hist histogram) &key)
@@ -104,45 +104,45 @@ the hist data is stored in an array (slot `hist'):
       (%add-to-hist hist val))))
 
 (defmethod hist-normed-reduce :around ((hist histogram)
-				       &key
-					 (norm-fn #'hist-vector-euclid-norm)
-					 (offset  :center)
-					 (min     :default)
-					 (max     :default)
-					 (bins    :default))
+                                       &key
+                                         (norm-fn #'hist-vector-euclid-norm)
+                                         (offset  :center)
+                                         (min     :default)
+                                         (max     :default)
+                                         (bins    :default))
   (flet ((min* (list) (if (listp list) (reduce #'min list) list))
-	 (max* (list) (if (listp list) (reduce #'max list) list)))
+         (max* (list) (if (listp list) (reduce #'max list) list)))
     (let ((min (case min
-		 (:default 0.0)
-		 (:outer   (hist-vector-euclid-norm (hist-min hist)))
-		 (:inner   (min* (hist-min hist)))
-		 (otherwise
-		  (cond ((functionp min)
-			 (funcall min (hist-min hist) (hist-max hist)))
-			((numberp min) min)
-			(t 0.0)))))
-	  (max (case max
-		 ((:default :outer)
-		  (hist-vector-euclid-norm (hist-max hist)))
-		 (:inner (min* (hist-max hist)))
-		 (otherwise
-		  (cond ((functionp max)
-			 (funcall max (hist-min hist) (hist-max hist)))
-			((numberp max) max)
-			(t (hist-vector-euclid-norm (hist-max hist)))))))
-	  (bins (case bins
-		  (:default (max* (hist-bins hist)))
-		  (otherwise
-		   (cond ((functionp bins)
-			  (funcall bins (hist-bins hist)))
-			 ((numberp bins) bins)
-			 (t (max* (hist-bins hist))))))))
+                 (:default 0.0)
+                 (:outer   (hist-vector-euclid-norm (hist-min hist)))
+                 (:inner   (min* (hist-min hist)))
+                 (otherwise
+                  (cond ((functionp min)
+                         (funcall min (hist-min hist) (hist-max hist)))
+                        ((numberp min) min)
+                        (t 0.0)))))
+          (max (case max
+                 ((:default :outer)
+                  (hist-vector-euclid-norm (hist-max hist)))
+                 (:inner (min* (hist-max hist)))
+                 (otherwise
+                  (cond ((functionp max)
+                         (funcall max (hist-min hist) (hist-max hist)))
+                        ((numberp max) max)
+                        (t (hist-vector-euclid-norm (hist-max hist)))))))
+          (bins (case bins
+                  (:default (max* (hist-bins hist)))
+                  (otherwise
+                   (cond ((functionp bins)
+                          (funcall bins (hist-bins hist)))
+                         ((numberp bins) bins)
+                         (t (max* (hist-bins hist))))))))
       (call-next-method hist
-			:norm-fn norm-fn
-			:bins    bins
-			:min     min
-			:max     max
-			:offset  offset))))
+                        :norm-fn norm-fn
+                        :bins    bins
+                        :min     min
+                        :max     max
+                        :offset  offset))))
 
 ;; By default, `hist-shape-eq' should return `nil'
 
@@ -157,13 +157,13 @@ the hist data is stored in an array (slot `hist'):
   (if (hist-shape-eq hist1 hist2)
       (call-next-method)
       (error (format nil "~A and ~A should be two histogram in same shape. "
-		     hist1 hist2))))
+                     hist1 hist2))))
 
 (defmethod hist-dump ((hist histogram))
   (with-slots (buffer-hist) hist
     (let ((dump (hist-dump-empty hist)))
       (loop for elem in buffer-hist do
-	(add-to-hist dump elem)))))
+        (add-to-hist dump elem)))))
 
 ;; Developer Note:
 ;; A `histogram' children should implement below methods and functions:
@@ -227,13 +227,13 @@ By default, `min' is -1.0 and `max' is 1.0, `bins' is 100.
 (defmethod hist-rebin! ((histo histogram))
   (with-slots (min max tick bins hist buffer-hist buffer-cache) histo
     (let* ((%min (min max min))
-	   (%max (max max min)))
+           (%max (max max min)))
       ;; clear hist and recalculate hist range
       (setf min %min
-	    max %max
-	    tick (float (/ (- %max %min) bins))
-	    hist (make-array bins :initial-element 0
-				  :element-type 'unsigned-byte))
+            max %max
+            tick (float (/ (- %max %min) bins))
+            hist (make-array bins :initial-element 0
+                                  :element-type 'unsigned-byte))
       ;; return histo self
       histo)))
 
@@ -241,120 +241,120 @@ By default, `min' is -1.0 and `max' is 1.0, `bins' is 100.
   (with-slots (hist min max tick) histo
     (when (and (<= min val) (< val max))
       (let ((index (floor (/ (- val min) tick))))
-	(incf (aref hist index))
-	;; return added index
-	(values index)))))
+        (incf (aref hist index))
+        ;; return added index
+        (values index)))))
 
 (defmethod hist-iter-over ((histo histogram) fn &key (use-index t))
   (with-slots (hist bins min tick) histo
     (if use-index
-	(loop for i below bins do
-	  (funcall fn (aref hist i) i))
-	(loop for i below bins do
-	  (funcall fn (aref hist i) (+ min (* tick i)) (+ min (* tick (1+ i))))))))
+        (loop for i below bins do
+          (funcall fn (aref hist i) i))
+        (loop for i below bins do
+          (funcall fn (aref hist i) (+ min (* tick i)) (+ min (* tick (1+ i))))))))
 
 (defmethod hist-to-csv ((histo histogram) path &key (if-exists :supersede))
   (with-slots (hist bins) histo
     (with-open-file (csv path :direction :output :if-exists if-exists)
       (hist-iter-over histo
-		      (lambda (count x)
-			(format csv "~d, ~d~%" x count))
-		      :use-index t))
+                      (lambda (count x)
+                        (format csv "~d, ~d~%" x count))
+                      :use-index t))
     path))
 
 (defmethod hist-to-ascii ((histo histogram) &key (stream t) &allow-other-keys)
   (with-slots (hist bins min max) histo
     (let ((cmax 0)
-	  (width 30))
+          (width 30))
       (loop for i below bins
-	    for count = (aref hist i)
-	    if (> count cmax)
-	      do (setf cmax count)
-	    collect count into counts
-	    finally (format stream "~&* min: ~A~%~{| ~{~A ~D~}~^~%~}~&* max: ~A~%"
-			    min
-			    (mapcar (lambda (count)
-				      (list (make-string (floor (* (/ count cmax) width))
-							 :initial-element #\#)
-					    count))
-				    counts)
-			    max)))))
+            for count = (aref hist i)
+            if (> count cmax)
+              do (setf cmax count)
+            collect count into counts
+            finally (format stream "~&* min: ~A~%~{| ~{~A ~D~}~^~%~}~&* max: ~A~%"
+                            min
+                            (mapcar (lambda (count)
+                                      (list (make-string (floor (* (/ count cmax) width))
+                                                         :initial-element #\#)
+                                            count))
+                                    counts)
+                            max)))))
 
 (defmethod hist-mean ((histo histogram) &key (density-fn #'identity) (offset :center))
   (with-slots (hist min tick) histo
     (let ((numerator   0)
-	  (denominator 0)
-	  (offset (case offset
-		    (:left 0.0)
-		    (:right 1.0)
-		    (:center 0.5)
-		    (otherwise
-		     (if (numberp offset) offset 0.5)))))
+          (denominator 0)
+          (offset (case offset
+                    (:left 0.0)
+                    (:right 1.0)
+                    (:center 0.5)
+                    (otherwise
+                     (if (numberp offset) offset 0.5)))))
       (flet ((inc (count i)
-	       (let ((density (funcall density-fn count)))
-		 (incf numerator   (* density (+ i offset)))
-		 (incf denominator density)))
-	     (inc-fn (count i)
-	       (let ((density (funcall density-fn count)))
-		 (incf numerator   (* density (funcall offset i)))
-		 (incf denominator density))))
-	(if (functionp offset)
-	    (hist-iter-over histo #'inc-fn :use-index t)
-	    (hist-iter-over histo #'inc    :use-index t)))
+               (let ((density (funcall density-fn count)))
+                 (incf numerator   (* density (+ i offset)))
+                 (incf denominator density)))
+             (inc-fn (count i)
+               (let ((density (funcall density-fn count)))
+                 (incf numerator   (* density (funcall offset i)))
+                 (incf denominator density))))
+        (if (functionp offset)
+            (hist-iter-over histo #'inc-fn :use-index t)
+            (hist-iter-over histo #'inc    :use-index t)))
       (float (+ (* (/ numerator denominator) tick) min)))))
 
 (defmethod hist-normed-reduce ((histo histogram)
-			       &key norm-fn offset min max bins)
+                               &key norm-fn offset min max bins)
   (let ((reduced-hist (make-histogram '()
-				      :min  min
-				      :max  max
-				      :bins bins))
-	(offset (case offset
-		  (:left     0.0)
-		  (:right    1.0)
-		  (:center   0.5)
-		  (otherwise (if (numberp offset) offset 0.5)))))
+                                      :min  min
+                                      :max  max
+                                      :bins bins))
+        (offset (case offset
+                  (:left     0.0)
+                  (:right    1.0)
+                  (:center   0.5)
+                  (otherwise (if (numberp offset) offset 0.5)))))
     (flet ((inc (count x-left x-right)
-	     (let* ((x (+ (* offset x-left) (* (- 1.0 offset) x-right)))
-		    (norm (funcall norm-fn x)))
-	       (dotimes (i count)
-		 (add-to-hist reduced-hist norm))))
-	   (inc-fn (count x-left x-right)
-	     (let* ((x (funcall offset x-left x-right))
-		    (norm (funcall norm-fn x)))
-	       (dotimes (i count)
-		 (add-to-hist reduced-hist norm)))))
+             (let* ((x (+ (* offset x-left) (* (- 1.0 offset) x-right)))
+                    (norm (funcall norm-fn x)))
+               (dotimes (i count)
+                 (add-to-hist reduced-hist norm))))
+           (inc-fn (count x-left x-right)
+             (let* ((x (funcall offset x-left x-right))
+                    (norm (funcall norm-fn x)))
+               (dotimes (i count)
+                 (add-to-hist reduced-hist norm)))))
       (if (functionp offset)
-	  (hist-iter-over histo #'inc-fn :use-index nil)
-	  (hist-iter-over histo #'inc    :use-index nil)))
+          (hist-iter-over histo #'inc-fn :use-index nil)
+          (hist-iter-over histo #'inc    :use-index nil)))
     reduced-hist))
 
 (defmethod hist-normed-mean (histo &key (norm-fn #'hist-vector-euclid-norm)
-				     (density-fn #'identity)
-				     (offset :center))
+                                     (density-fn #'identity)
+                                     (offset :center))
   (let ((numerator   0)
-	(denominator 0)
-	(offset (case offset
-		  (:left     0.0)
-		  (:right    1.0)
-		  (:center   0.5)
-		  (otherwise (if (numberp offset) offset 0.5)))))
+        (denominator 0)
+        (offset (case offset
+                  (:left     0.0)
+                  (:right    1.0)
+                  (:center   0.5)
+                  (otherwise (if (numberp offset) offset 0.5)))))
     (flet ((inc (count x-left x-right)
-	     (let* ((x       (+ (* offset x-left)
-				(* (- 1.0 offset) x-right)))
-		    (norm    (funcall norm-fn x))
-		    (density (funcall density-fn count)))
-	       (incf numerator   (* density norm))
-	       (incf denominator density)))
-	   (inc-fn (count x-left x-right)
-	     (let* ((x       (funcall offset x-left x-right))
-		    (norm    (funcall norm-fn x))
-		    (density (funcall density-fn count)))
-	       (incf numerator   (* density norm))
-	       (incf denominator density))))
+             (let* ((x       (+ (* offset x-left)
+                                (* (- 1.0 offset) x-right)))
+                    (norm    (funcall norm-fn x))
+                    (density (funcall density-fn count)))
+               (incf numerator   (* density norm))
+               (incf denominator density)))
+           (inc-fn (count x-left x-right)
+             (let* ((x       (funcall offset x-left x-right))
+                    (norm    (funcall norm-fn x))
+                    (density (funcall density-fn count)))
+               (incf numerator   (* density norm))
+               (incf denominator density))))
       (if (functionp offset)
-	  (hist-iter-over histo #'inc-fn :use-index nil)
-	  (hist-iter-over histo #'inc    :use-index nil)))
+          (hist-iter-over histo #'inc-fn :use-index nil)
+          (hist-iter-over histo #'inc    :use-index nil)))
     (float (/ numerator denominator))))
 
 (defmethod hist-shape-eq ((hist1 histogram) (hist2 histogram))
@@ -364,16 +364,16 @@ By default, `min' is -1.0 and `max' is 1.0, `bins' is 100.
 
 (defmethod hist-dump-empty ((hist histogram))
   (make-histogram () :min  (hist-min hist)
-		     :max  (hist-max hist)
-		     :bins (hist-bins hist)))
+                     :max  (hist-max hist)
+                     :bins (hist-bins hist)))
 
 (defmethod hist-add ((hist1 histogram) (hist2 histogram))
   (let ((new-hist (hist-dump-empty hist1)))
     (setf (slot-value new-hist 'buffer-hist)
-	  (append (slot-value hist1 'buffer-hist)
-		  (slot-value hist2 'buffer-hist)))
+          (append (slot-value hist1 'buffer-hist)
+                  (slot-value hist2 'buffer-hist)))
     (with-slots (hist) new-hist
       (loop for i below (hist-bins new-hist) do
-	(setf (at hist i) (+ (at (slot-value hist1 'hist) i)
-			     (at (slot-value hist2 'hist) i)))))
+        (setf (at hist i) (+ (at (slot-value hist1 'hist) i)
+                             (at (slot-value hist2 'hist) i)))))
     new-hist))
