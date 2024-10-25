@@ -180,6 +180,13 @@ Example:
                     :use-index nil)
 "))
 
+(defmacro with-iter-hist ((hist &key (use-index t)) lambda-list &body body)
+  "See `hist-iter-over'. "
+  `(hist-iter-over ,hist (lambda ,lambda-list ,@body)
+                   :use-index ,use-index))
+
+(trivial-indent:define-indentation with-iter-hist (4 &lambda &body))
+
 (defgeneric hist-mean (hist &key density-fn offset)
   (:documentation
    "Return mean value based on the density distribution.

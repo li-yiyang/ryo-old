@@ -18,7 +18,7 @@
   :author ("凉凉")
   :version "0"
   :description "Do some basic statistic things, like histogram. "
-  :depends-on ()
+  :depends-on (clog clog-c3 trivial-indent)
   :serial t
   :pathname "statistics"
   :components
@@ -30,7 +30,8 @@
    (:file "histogram-add-info")
    (:file "2d-histogram")
    (:file "2d-histogram-add-info")
-   (:file "preview")))
+   (:file "preview")
+   (:file "clog")))
 
 (asdf:defsystem #:ryo/tex
   :author ("凉凉")

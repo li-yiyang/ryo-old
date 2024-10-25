@@ -11,8 +11,7 @@
 
 * to call
 #+begin_src lisp
-  (tex (:documentclass "article"
-        :usepackage ("graphicx")
+  (tex (:documentclass "beamer"
         :title "A simple")
     (frame (:title "Hello"))
     (dotimes (i 10)
